@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ElevatorManager.Infrastructure.Repositories
 {
-    public class ElevatorTripRepository : IElevatorTripRepository
+    internal class ElevatorTripRepository : IElevatorTripRepository
     {
         private readonly AppDbContext _context;
 

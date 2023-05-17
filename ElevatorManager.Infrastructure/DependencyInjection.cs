@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo(assemblyName: "ElevatorManager.Tests")]
+
 namespace ElevatorManager.Infrastructure
 {
     public static class DependencyInjection
