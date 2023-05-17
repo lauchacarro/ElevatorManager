@@ -1,4 +1,5 @@
 ﻿using ElevatorManager.Application.Commons;
+using ElevatorManager.Application.Extensions;
 using ElevatorManager.Application.Mappings;
 using ElevatorManager.Domain.Dtos;
 using ElevatorManager.Domain.Entities;
@@ -52,7 +53,7 @@ namespace ElevatorManager.Application.Services
 
             var allFloors = CollectAllFloorsFromTrips(completeTrips);
 
-            var floors = FilterFloorsByTime(allFloors, diffSeconds);
+            var floors = allFloors.FilterFloorsByTime(diffSeconds);
 
 
             ElevatorTripCurrentStatusDto result = GetElevatorTripStatus(floors, completeTrips);
@@ -156,20 +157,7 @@ namespace ElevatorManager.Application.Services
             return result;
         }
 
-        /// <summary>
-        /// Devuelve una lista que contiene solo los elementos que están después o en el mismo índice de segundos especificado
-        /// </summary>
-        /// <param name="floors">Lista de todos los pisos visitados</param>
-        /// <param name="diffSeconds">Total de segundos transcurridos</param>
-        /// <returns>Devuelve el piso actual y los pendientes basados en el tiempo.</returns>
-        internal static List<TripFloor> FilterFloorsByTime(IEnumerable<TripFloor> floors, TimeSpan diffSeconds)
-        {
 
-            var result = floors.Where((_, i) => i >= diffSeconds.TotalSeconds);
-
-            return result.ToList();
-
-        }
 
         public Task<Result<ElevatorTripDto>> MoveElevatorFromInsideAsync(MoveElevatorRequest request)
         {
@@ -195,16 +183,14 @@ namespace ElevatorManager.Application.Services
 
             var currentTrip = currentTripResult.Value;
 
-            var nextNumberTrip = currentTrip.PendientFloors.Any() ?
-                currentTrip.Tríps.Last().NumberTrip + 1 :
-                1;
+            var nextNumberTrip = currentTrip.CalculateNextNumberTrip();
 
             if (currentTrip.CurrentFloor == request.Floor)
             {
                 return Result.Fail<ElevatorTripDto>(ErrorMessages.ElevatorAlreadyOnRequestedFloor);
             }
 
-            bool alreadyPressed = currentTrip.Tríps.Any(x => x.DestinationFloor == request.Floor && x.Priority == priority);
+            bool alreadyPressed = currentTrip.IsAlreadyPressed(request, priority);
 
             if (alreadyPressed)
             {
