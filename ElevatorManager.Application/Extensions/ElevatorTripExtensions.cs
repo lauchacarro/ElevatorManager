@@ -7,9 +7,17 @@ namespace ElevatorManager.Application.Extensions
     {
         public static int CalculateNextNumberTrip(this ElevatorTripCurrentStatusDto currentTrip)
         {
-            return currentTrip.PendientFloors.Any() ?
+            if (currentTrip.PendientFloors.Any())
+            {
+                return currentTrip.Tríps.Last().NumberTrip;
+            }
+            else
+            {
+                return currentTrip.Tríps.Any() ?
                 currentTrip.Tríps.Last().NumberTrip + 1 :
                 1;
+            }
+            
         }
 
         public static bool IsAlreadyPressed(this ElevatorTripCurrentStatusDto currentTrip, MoveElevatorRequest request, Priority priority)

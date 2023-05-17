@@ -2,6 +2,7 @@
 using ElevatorManager.Domain.Entities;
 using ElevatorManager.Domain.Repositories;
 using ElevatorManager.Domain.Services;
+using ElevatorManager.Tests.Helpers;
 
 using Moq;
 
@@ -10,17 +11,18 @@ namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
     public class ElevatorTripServiceTests_GetCurrentTripAsync_Tests
     {
         [Fact]
-        public async Task When_SecondsLaterIsLessThanTotalFloors_Expect_CurrentFloorAndPendientFloors()
+        public async Task Should_ReturnCurrentAndPendientFloors_When_SecondsThatPassedIsLessThanTotalFloors()
         {
             // Arrange
 
-            int secondsLater = 8;
-
-            DateTime requestTime = new DateTime(2023, 05, 18, 12, 20, 13);
+            DateTime requestTime = FakeValues.RequestTime;
 
             var dateTimeServiceMock = new Mock<IDateTimeService>();
 
-            dateTimeServiceMock.Setup(m => m.GetNow()).Returns(requestTime.AddSeconds(secondsLater));
+            dateTimeServiceMock.Setup(m => m.GetNow())
+                .Returns(requestTime.AddSeconds(FakeValues.SecondsThatPassed));
+
+
 
 
             var elevatorTripRepositoryMock = new Mock<IElevatorTripRepository>();
@@ -55,12 +57,17 @@ namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
 
 
 
-            elevatorTripRepositoryMock.Setup(m => m.GetTripsByNumberAsync(It.IsAny<int>())).ReturnsAsync(prevTrips);
-            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync()).ReturnsAsync(trips);
+            elevatorTripRepositoryMock.Setup(m => m.GetTripsByNumberAsync(It.IsAny<int>()))
+                .ReturnsAsync(prevTrips);
+
+            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync())
+                .ReturnsAsync(trips);
+
+            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
+
 
             // Act
 
-            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
 
             var actual = await service.GetCurrentTripAsync();
 
@@ -71,22 +78,20 @@ namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
         }
 
         [Fact]
-        public async Task When_SecondsLaterIsLessThanTotalFloorsAndOnlyOneTrip_Expect_CurrentFloorAndPendientFloors()
+        public async Task Should_ReturnCurrentAndPendientFloors_When_SecondsThatPassedIsLessThanTotalFloorsAndDontHavePrevTrips()
         {
             // Arrange
 
-            int secondsLater = 8;
-
-            DateTime requestTime = new DateTime(2023, 05, 18, 12, 20, 13);
+            DateTime requestTime = FakeValues.RequestTime;
 
             var dateTimeServiceMock = new Mock<IDateTimeService>();
 
-            dateTimeServiceMock.Setup(m => m.GetNow()).Returns(requestTime.AddSeconds(secondsLater));
+            dateTimeServiceMock.Setup(m => m.GetNow())
+                .Returns(requestTime.AddSeconds(FakeValues.SecondsThatPassed));
+
 
 
             var elevatorTripRepositoryMock = new Mock<IElevatorTripRepository>();
-
-
 
             var trips = new List<ElevatorTrip>
             {
@@ -105,11 +110,14 @@ namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
             };
 
 
-            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync()).ReturnsAsync(trips);
+            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync())
+                .ReturnsAsync(trips);
+
+            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
+
 
             // Act
 
-            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
 
             var actual = await service.GetCurrentTripAsync();
 
@@ -121,17 +129,19 @@ namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
         }
 
         [Fact]
-        public async Task When_SecondsLaterIsZeroAndHaveTwoTrips_Expect_CurrentFloorIsTheLastOfPrevTrip()
+        public async Task Should_ReturnCurrentFloorIsTheLastOfPrevTrip_When_SecondsThatPassedIsZeroAndHaveTwoTrips()
         {
             // Arrange
 
-            int secondsLater = 0;
+            const int SecondsThatPassed = FakeValues.Zero;
 
-            DateTime requestTime = new DateTime(2023, 05, 18, 12, 20, 13);
+            DateTime requestTime = FakeValues.RequestTime;
 
             var dateTimeServiceMock = new Mock<IDateTimeService>();
 
-            dateTimeServiceMock.Setup(m => m.GetNow()).Returns(requestTime.AddSeconds(secondsLater));
+            dateTimeServiceMock.Setup(m => m.GetNow())
+                .Returns(requestTime.AddSeconds(SecondsThatPassed));
+
 
 
             var elevatorTripRepositoryMock = new Mock<IElevatorTripRepository>();
@@ -153,13 +163,17 @@ namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
             };
 
 
+            elevatorTripRepositoryMock.Setup(m => m.GetTripsByNumberAsync(It.IsAny<int>()))
+                .ReturnsAsync(prevTrips);
 
-            elevatorTripRepositoryMock.Setup(m => m.GetTripsByNumberAsync(It.IsAny<int>())).ReturnsAsync(prevTrips);
-            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync()).ReturnsAsync(trips);
+            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync())
+                .ReturnsAsync(trips);
+
+            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
+
 
             // Act
 
-            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
 
             var actual = await service.GetCurrentTripAsync();
 
@@ -170,22 +184,22 @@ namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
         }
 
         [Fact]
-        public async Task When_SecondsLaterIsZeroAndHaveOnlyOneTrip_Expect_CurrentFloorIsZero()
+        public async Task Should_ReturnCurrentFloorIsZero_When_SecondsThatPassedIsZeroAndHaveOnlyOneTrip()
         {
             // Arrange
 
-            int secondsLater = 0;
+            const int SecondsThatPassed = FakeValues.Zero;
 
-            DateTime requestTime = new DateTime(2023, 05, 18, 12, 20, 13);
+            DateTime requestTime = FakeValues.RequestTime;
 
             var dateTimeServiceMock = new Mock<IDateTimeService>();
 
-            dateTimeServiceMock.Setup(m => m.GetNow()).Returns(requestTime.AddSeconds(secondsLater));
+            dateTimeServiceMock.Setup(m => m.GetNow())
+                .Returns(requestTime.AddSeconds(SecondsThatPassed));
+
 
 
             var elevatorTripRepositoryMock = new Mock<IElevatorTripRepository>();
-
-
 
             var trips = new List<ElevatorTrip>
             {
@@ -196,11 +210,14 @@ namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
             };
 
 
-            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync()).ReturnsAsync(trips);
+            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync())
+                .ReturnsAsync(trips);
+
+            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
+
 
             // Act
 
-            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
 
             var actual = await service.GetCurrentTripAsync();
 
@@ -211,17 +228,19 @@ namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
         }
 
         [Fact]
-        public async Task When_SecondsLaterGratherThanTotalFloorsAndHaveTwoTrips_Expect_CurrentFloorIsTheLast()
+        public async Task Should_ReturnCurrentFloorIsTheLast_When_SecondsThatPassedIsGratherThanTotalFloorsAndHaveTwoTrips()
         {
             // Arrange
 
-            int secondsLater = 20;
+            const int SecondsThatPassed = 20;
 
-            DateTime requestTime = new DateTime(2023, 05, 18, 12, 20, 13);
+            DateTime requestTime = FakeValues.RequestTime;
 
             var dateTimeServiceMock = new Mock<IDateTimeService>();
 
-            dateTimeServiceMock.Setup(m => m.GetNow()).Returns(requestTime.AddSeconds(secondsLater));
+            dateTimeServiceMock.Setup(m => m.GetNow())
+                .Returns(requestTime.AddSeconds(SecondsThatPassed));
+
 
 
             var elevatorTripRepositoryMock = new Mock<IElevatorTripRepository>();
@@ -244,58 +263,60 @@ namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
 
 
 
-            elevatorTripRepositoryMock.Setup(m => m.GetTripsByNumberAsync(It.IsAny<int>())).ReturnsAsync(prevTrips);
-            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync()).ReturnsAsync(trips);
+            elevatorTripRepositoryMock.Setup(m => m.GetTripsByNumberAsync(It.IsAny<int>()))
+                .ReturnsAsync(prevTrips);
+
+            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync())
+                .ReturnsAsync(trips);
+
+            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
+
 
             // Act
 
-            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
 
             var actual = await service.GetCurrentTripAsync();
 
             // Assert
 
             Assert.Equal(10, actual!.Value.CurrentFloor);
-            Assert.Equal(Array.Empty<int>(), actual!.Value.PendientFloors);
+            Assert.Empty(actual!.Value.PendientFloors);
         }
 
 
 
         [Fact]
-        public async Task When_DontHaveTrips_Expect_CurrentFloorIsZero()
+        public async Task Should_ReturnCurrentFloorIsZero_When_DontHaveTrips()
         {
             // Arrange
 
-            int secondsLater = 8;
-
-            DateTime requestTime = new DateTime(2023, 05, 18, 12, 20, 13);
+            DateTime requestTime = FakeValues.RequestTime;
 
             var dateTimeServiceMock = new Mock<IDateTimeService>();
 
-            dateTimeServiceMock.Setup(m => m.GetNow()).Returns(requestTime.AddSeconds(secondsLater));
+            dateTimeServiceMock.Setup(m => m.GetNow())
+                .Returns(requestTime.AddSeconds(FakeValues.SecondsThatPassed));
+
 
 
             var elevatorTripRepositoryMock = new Mock<IElevatorTripRepository>();
 
+            var trips = new List<ElevatorTrip>();
 
-            var trips = new List<ElevatorTrip>
-            {
+            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync())
+                .ReturnsAsync(trips);
 
-            };
-
-
-            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync()).ReturnsAsync(trips);
+            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
 
             // Act
 
-            ElevatorTripService service = new(dateTimeServiceMock.Object, elevatorTripRepositoryMock.Object);
 
             var actual = await service.GetCurrentTripAsync();
 
             // Assert
 
-            Assert.Equal(0, actual!.Value.CurrentFloor);
-            Assert.Equal(Array.Empty<int>(), actual!.Value.PendientFloors);
+            Assert.Equal(FakeValues.Zero, actual!.Value.CurrentFloor);
+            Assert.Empty(actual!.Value.PendientFloors);
         }
     }
 }

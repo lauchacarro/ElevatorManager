@@ -126,6 +126,9 @@ namespace ElevatorManager.Application.Services
 
             List<TripFloor> result = new();
 
+            if (!trips.Any())
+                return result;
+
             for (int i = 0; i < trips.Count() - 1; i++)
             {
                 //Se calcula la diferencia en valor absoluto entre el piso de destino del viaje actual y el piso de destino del siguiente viaje
@@ -169,13 +172,13 @@ namespace ElevatorManager.Application.Services
             return MoveElevatorAsync(request, Priority.Low);
         }
 
-        private async Task<Result<ElevatorTripDto>> MoveElevatorAsync(MoveElevatorRequest request, Priority priority)
+        internal async Task<Result<ElevatorTripDto>> MoveElevatorAsync(MoveElevatorRequest request, Priority priority)
         {
             var now = _dateTimeService.GetNow();
 
             if (request.Floor < 0)
             {
-                return Result.Fail<ElevatorTripDto>(ErrorMessages.FloorGratherThanZero);
+                return Result.Fail<ElevatorTripDto>(ErrorMessages.FloorMustBeGratherThanZero);
             }
 
 

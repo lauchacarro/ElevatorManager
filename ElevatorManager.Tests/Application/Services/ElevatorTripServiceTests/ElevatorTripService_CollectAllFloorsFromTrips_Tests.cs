@@ -1,45 +1,52 @@
-﻿using ElevatorManager.Application.Services;
+﻿using AutoFixture.Xunit2;
+
+using ElevatorManager.Application.Services;
 using ElevatorManager.Domain.Dtos;
 using ElevatorManager.Domain.Entities;
 using ElevatorManager.Domain.Enums;
 using ElevatorManager.Domain.Repositories;
-using ElevatorManager.Domain.Services;
+using ElevatorManager.Tests.Helpers;
 
 using Moq;
+
+using Xunit;
 
 namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
 {
     public class ElevatorTripService_CollectAllFloorsFromTrips_Tests
     {
         [Fact]
-        public void Success()
+        public void Should_ReturnAllFloorsFromTrips_When_HaveALotOfTrips()
         {
-            int secondsLater = 8;
 
-            DateTime firstRequestTime = new DateTime(2023, 05, 18, 12, 20, 13);
-
-            var dateTimeServiceMock = new Mock<IDateTimeService>();
-
-            dateTimeServiceMock.Setup(m => m.GetNow()).Returns(firstRequestTime.AddSeconds(secondsLater));
+            // Arrange
 
             var elevatorTripRepositoryMock = new Mock<IElevatorTripRepository>();
 
-            // Arrange
             var trips = new List<ElevatorTrip>
             {
-                new ElevatorTrip(DateTime.Now, 0, 5, Priority.High)
+                new ElevatorTrip(FakeValues.Now, FakeValues.Zero, 5, Priority.High)
                 {
                     Id = Guid.NewGuid()
                 },
-                new ElevatorTrip(DateTime.Now, 0, 3, Priority.Low)
+                new ElevatorTrip(FakeValues.Now, FakeValues.Zero, 3, Priority.Low)
                 {
                     Id = Guid.NewGuid()
                 },
-                new ElevatorTrip(DateTime.Now, 0, 7, Priority.Low)
+                new ElevatorTrip(FakeValues.Now, FakeValues.Zero, 7, Priority.Low)
                 {
                     Id = Guid.NewGuid()
                 }
             };
+
+            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync()).ReturnsAsync(trips);
+
+
+            // Act
+
+            var actualFloors = ElevatorTripService.CollectAllFloorsFromTrips(trips);
+
+            // Assert
 
             var expectedFloors = new List<TripFloor>
             {
@@ -52,16 +59,107 @@ namespace ElevatorManager.Tests.Application.Services.ElevatorTripServiceTests
                 new TripFloor(trips[2].Id, 7)
             };
 
+
+            Assert.Collection(expectedFloors,
+                expectedFloor1 =>
+                {
+                    Assert.Equal(expectedFloor1.TripId, actualFloors.ElementAt(0).TripId);
+                    Assert.Equal(expectedFloor1.Floor, actualFloors.ElementAt(0).Floor);
+                },
+                expectedFloor2 =>
+                {
+                    Assert.Equal(expectedFloor2.TripId, actualFloors.ElementAt(1).TripId);
+                    Assert.Equal(expectedFloor2.Floor, actualFloors.ElementAt(1).Floor);
+                },
+                expectedFloor3 =>
+                {
+                    Assert.Equal(expectedFloor3.TripId, actualFloors.ElementAt(2).TripId);
+                    Assert.Equal(expectedFloor3.Floor, actualFloors.ElementAt(2).Floor);
+                },
+                expectedFloor4 =>
+                {
+                    Assert.Equal(expectedFloor4.TripId, actualFloors.ElementAt(3).TripId);
+                    Assert.Equal(expectedFloor4.Floor, actualFloors.ElementAt(3).Floor);
+                },
+                expectedFloor5 =>
+                {
+                    Assert.Equal(expectedFloor5.TripId, actualFloors.ElementAt(4).TripId);
+                    Assert.Equal(expectedFloor5.Floor, actualFloors.ElementAt(4).Floor);
+                },
+                expectedFloor6 =>
+                {
+                    Assert.Equal(expectedFloor6.TripId, actualFloors.ElementAt(5).TripId);
+                    Assert.Equal(expectedFloor6.Floor, actualFloors.ElementAt(5).Floor);
+                },
+                expectedFloor7 =>
+                {
+                    Assert.Equal(expectedFloor7.TripId, actualFloors.ElementAt(6).TripId);
+                    Assert.Equal(expectedFloor7.Floor, actualFloors.ElementAt(6).Floor);
+                }
+            );
+
+        }
+
+        [Theory, AutoData]
+        public void Should_ReturnOneFloor_When_HaveOneTrip(ElevatorTrip elevatorTrip)
+        {
+
+            // Arrange
+
+            var elevatorTripRepositoryMock = new Mock<IElevatorTripRepository>();
+
+            var trips = new List<ElevatorTrip>
+            {
+                elevatorTrip
+            };
+
             elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync()).ReturnsAsync(trips);
 
 
+            // Act
+
             var actualFloors = ElevatorTripService.CollectAllFloorsFromTrips(trips);
 
-            for (var i = 0; i < actualFloors.Count; i++)
+            // Assert
+
+            var expectedFloors = new List<TripFloor>
             {
-                Assert.Equal(expectedFloors[i].TripId, actualFloors[i].TripId);
-                Assert.Equal(expectedFloors[i].Floor, actualFloors[i].Floor);
-            }
+                new TripFloor(trips[0].Id, elevatorTrip.DestinationFloor)
+            };
+
+
+            Assert.Single(actualFloors);
+
+            Assert.Collection(expectedFloors,
+                expectedFloor1 =>
+                {
+                    Assert.Equal(expectedFloor1.TripId, actualFloors.ElementAt(0).TripId);
+                    Assert.Equal(expectedFloor1.Floor, actualFloors.ElementAt(0).Floor);
+                }
+            );
+        }
+
+        [Fact]
+        public void Should_ReturnEmptyList_When_DontHaveTrips()
+        {
+
+            // Arrange
+
+            var elevatorTripRepositoryMock = new Mock<IElevatorTripRepository>();
+
+            var trips = new List<ElevatorTrip>();
+
+            elevatorTripRepositoryMock.Setup(m => m.GetLastTripsAsync()).ReturnsAsync(trips);
+
+
+            // Act
+
+            var actualFloors = ElevatorTripService.CollectAllFloorsFromTrips(trips);
+
+            // Assert
+
+
+            Assert.Empty(actualFloors);
 
         }
     }
