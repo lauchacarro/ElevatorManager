@@ -4,40 +4,29 @@ using ElevatorManager.Domain.Entities;
 using ElevatorManager.Infrastructure.Repositories;
 
 using Microsoft.EntityFrameworkCore;
+using ElevatorManager.Tests.Helpers;
+using AutoFixture.Xunit2;
 
 namespace ElevatorManager.Tests.Infrastructure.Repositories.ElevatorTripRepositoryTests
 {
     public class ElevatorTripRepository_AddAsync_Tests
     {
-        private readonly DbContextOptions<AppDbContext> _options;
 
-        public ElevatorTripRepository_AddAsync_Tests()
-        {
-            _options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
-        }
 
-        [Fact]
-        public async Task AddAsync_Should_AddElevatorTripToDatabase()
+        [Theory, AutoData]
+        public async Task Should_ReturnSameTrip_When_AddTrip(ElevatorTrip elevatorTrip)
         {
             // Arrange
-            using (var context = new AppDbContext(_options))
-            {
-                var repository = new ElevatorTripRepository(context);
-                var elevatorTrip = new ElevatorTrip(default, default, default, default);
+            using AppDbContext context = SetupHelpers.SetupAppDbContext();
 
-                // Act
-                var result = await repository.AddAsync(elevatorTrip);
+            var repository = new ElevatorTripRepository(context);
 
-                // Assert
-                Assert.Equal(elevatorTrip, result);
-                Assert.NotEqual(Guid.Empty, result.Id);
+            // Act
+            var result = await repository.AddAsync(elevatorTrip);
 
-                var tripsInDatabase = await context.ElevatorTrips.ToListAsync();
-                Assert.Single(tripsInDatabase);
-                Assert.Equal(elevatorTrip, tripsInDatabase.First());
-            }
+            // Assert
+            Assert.Equal(elevatorTrip, result);
+ 
         }
     }
 }

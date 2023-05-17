@@ -1,55 +1,68 @@
-﻿using ElevatorManager.Domain.Entities;
+﻿using AutoFixture.Xunit2;
+
+using ElevatorManager.Domain.Entities;
+using ElevatorManager.Domain.Enums;
 using ElevatorManager.Infrastructure.Data;
 
 using ElevatorManager.Infrastructure.Repositories;
-
-using Microsoft.EntityFrameworkCore;
+using ElevatorManager.Tests.Helpers;
 
 namespace ElevatorManager.Tests.Infrastructure.Repositories.ElevatorTripRepositoryTests
 {
     public class ElevatorTripRepository_GetTripsByNumberAsync_Tests
     {
-        private readonly DbContextOptions<AppDbContext> _options;
 
-        public ElevatorTripRepository_GetTripsByNumberAsync_Tests()
-        {
-            _options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
-        }
 
-        [Fact]
-        public async Task GetTripsByNumberAsync_Should_ReturnTripsWithGivenNumberInOrder()
+        [Theory, AutoData]
+        public async Task Should_ReturnTripsWithGivenNumberTrip_When_HaveALotOfTrips(int numberTrip)
         {
             // Arrange
-            using (var context = new AppDbContext(_options))
-            {
-                var repository = new ElevatorTripRepository(context);
 
-                DateTime requestTime = new DateTime(2023, 05, 18, 12, 20, 13);
+            using AppDbContext context = SetupHelpers.SetupAppDbContext();
 
-                var elevatorTrip1 = new ElevatorTrip(requestTime, 1, default, Domain.Enums.Priority.Low);
+            var repository = new ElevatorTripRepository(context);
 
-                var elevatorTrip2 = new ElevatorTrip(requestTime.AddSeconds(5), 2, default, Domain.Enums.Priority.High);
+            var tripFake1 = new ElevatorTrip(FakeValues.RequestTime, numberTrip, FakeValues.Zero, Priority.Low);
 
-                var elevatorTrip3 = new ElevatorTrip(requestTime.AddSeconds(2), 2, default, Domain.Enums.Priority.High);
+            var tripFake2 = new ElevatorTrip(FakeValues.RequestTime, FakeValues.Zero, FakeValues.Zero, Priority.Low);
 
 
-                await context.ElevatorTrips.AddRangeAsync(elevatorTrip1, elevatorTrip2, elevatorTrip3);
+            await context.ElevatorTrips.AddRangeAsync(tripFake1, tripFake2);
 
-                await context.SaveChangesAsync();
+            await context.SaveChangesAsync();
 
-                // Act
-                var result = await repository.GetTripsByNumberAsync(1);
+            // Act
+            var result = await repository.GetTripsByNumberAsync(numberTrip);
 
-                // Assert
-                var expectedTrips = new List<ElevatorTrip> { elevatorTrip1 };
+            // Assert
+
+            Assert.Equal(tripFake1.Id, result.ElementAt(0).Id);
+        }
+
+        [Theory, AutoData]
+        public async Task Should_ReturnEmptyList_When_DontHaveTripsWithGivenNumber(int numberTrip)
+        {
+            // Arrange
+
+            using AppDbContext context = SetupHelpers.SetupAppDbContext();
+
+            var repository = new ElevatorTripRepository(context);
+
+            var tripFake1 = new ElevatorTrip(FakeValues.RequestTime, FakeValues.Zero, FakeValues.Zero, Priority.Low);
+
+            var tripFake2 = new ElevatorTrip(FakeValues.RequestTime, FakeValues.Zero, FakeValues.Zero, Priority.Low);
 
 
+            await context.ElevatorTrips.AddRangeAsync(tripFake1, tripFake2);
 
-                Assert.Equal(expectedTrips[0].Id, result.ElementAt(0).Id);
+            await context.SaveChangesAsync();
 
-            }
+            // Act
+            var result = await repository.GetTripsByNumberAsync(numberTrip);
+
+            // Assert
+
+            Assert.Empty(result);
         }
 
     }
